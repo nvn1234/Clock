@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+            font-family: , -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, monospace;
+            font-size: 15vw;
+        }
+        #clock-container {
+            position: absolute;
+            text-align: center;
+        }
+        #clock {
+            display: block;
+        }
+        #battery {
+            font-size: 4vw;
+        }
+    </style>
+</head>
+<body>
+    <div id="clock-container">
+        <div id="clock"></div>
+        <div id="battery"></div>
+    </div>
+    <audio id="chime" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+
+    <script>
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const strTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)} ${ampm}`;
+            clock.textContent = strTime;
+
+            if (minutes === 0 && seconds === 0) {
+                document.getElementById('chime').play();
+            }
+        }
+
+        function pad(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        function updateBattery() {
+            navigator.getBattery().then(function(battery) {
+                const batteryDiv = document.getElementById('battery');
+                const batteryLevel = Math.round(battery.level * 100);
+                batteryDiv.textContent = `${batteryLevel}%`;
+
+                if (batteryLevel < 25) {
+                    alert("Battery level is below 25%. The page will now close.");
+                    window.close();
+                }
+            });
+        }
+
+        function preventSleep() {
+            setInterval(() => {
+                const noSleep = new NoSleep();
+                noSleep.enable();
+            }, 20000);
+        }
+
+        function moveClock() {
+            const clockContainer = document.getElementById('clock-container');
+            const x = Math.floor(Math.random() * 20 - 10); // Random movement within -10 to +10 pixels
+            const y = Math.floor(Math.random() * 20 - 10);
+            const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
+            const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
+
+            // Ensure new position stays within the viewport
+            const newLeft = Math.max(0, Math.min(window.innerWidth - clockContainer.offsetWidth, currentLeft + x));
+            const newTop = Math.max(0, Math.min(window.innerHeight - clockContainer.offsetHeight, currentTop + y));
+
+            clockContainer.style.left = `${newLeft}px`;
+            clockContainer.style.top = `${newTop}px`;
+        }
+
+        function enableFullScreen() {
+            const clockContainer = document.getElementById('clock-container');
+            clockContainer.addEventListener('dblclick', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            updateBattery();
+            setInterval(updateClock, 1000);
+            setInterval(updateBattery, 60000); // Update battery every minute
+            setInterval(moveClock, 60000); // Move clock every minute
+            enableFullScreen();
+            preventSleep();
+        });
+
+        // NoSleep.js to prevent screen from sleeping
+        class NoSleep {
+            constructor() {
+                this.noSleepVideo = document.createElement('video');
+                this.noSleepVideo.setAttribute('playsinline', '');
+                this.noSleepVideo.src = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAoaXNvbQAAAAAAAAAAAA8AAAAGcHJmMgAAAB9tZGF0AAAC8m1vb3YAAABsbXZoZAAAAABIZExXAAAD6WlzbzJhdmMxAAAAAElzdWJzAAAAAAABYV9hdnRsNAAAAAE='; // 1x1 pixel video base64 encoded
+                this.noSleepVideo.loop = true;
+                this.noSleepVideo.addEventListener('play', () => {
+                    this.noSleepVideo.currentTime = 0.5;
+                });
+            }
+
+            enable() {
+                this.noSleepVideo.play();
+            }
+
+            disable() {
+                this.noSleepVideo.pause();
+            }
+        }
+    </script>
+</body>
+</html>
