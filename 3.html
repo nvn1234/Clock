@@ -80,8 +80,8 @@
 
         function moveClock() {
             const clockContainer = document.getElementById('clock-container');
-            const x = Math.floor(Math.random() * 60 - 30); // Random movement within -10 to +10 pixels
-            const y = Math.floor(Math.random() * 60 - 30);
+            const x = Math.floor(Math.random() * 90 - 45); // Random movement within -10 to +10 pixels
+            const y = Math.floor(Math.random() * 90 - 45);
             const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
             const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
 
