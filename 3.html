@@ -26,6 +26,26 @@
         }
         #battery {
             font-size: 4vw;
+            margin-bottom: 1vw;
+        }
+        .button {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            color: black;
+            padding: 10px;
+            font-size: 2vw;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+        }
+        .buttons-container {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
         }
     </style>
 </head>
@@ -33,10 +53,16 @@
     <div id="clock-container">
         <div id="clock"></div>
         <div id="battery"></div>
+        <div class="buttons-container">
+            <button id="fullscreen-btn" class="button">Fullscreen</button>
+            <button id="toggle-time-btn" class="button">Switch to 24hr</button>
+        </div>
     </div>
     <audio id="chime" src="chime.mp3" preload="auto"></audio>
 
     <script>
+        let is24HourFormat = false;
+
         function updateClock() {
             const clock = document.getElementById('clock');
             const now = new Date();
@@ -44,9 +70,11 @@
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
-            const strTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)} ${ampm}`;
+            if (!is24HourFormat) {
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+            }
+            const strTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)} ${!is24HourFormat ? ampm : ''}`;
             clock.textContent = strTime;
 
             if (minutes === 0 && seconds === 0) {
@@ -71,16 +99,9 @@
             });
         }
 
-        function preventSleep() {
-            setInterval(() => {
-                const noSleep = new NoSleep();
-                noSleep.enable();
-            }, 20000);
-        }
-
         function moveClock() {
             const clockContainer = document.getElementById('clock-container');
-            const x = Math.floor(Math.random() * 900 - 450); // Random movement within -10 to +10 pixels
+            const x = Math.floor(Math.random() * 900 - 450); // Random movement within -450 to +450 pixels
             const y = Math.floor(Math.random() * 900 - 450);
             const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
             const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
@@ -94,16 +115,39 @@
         }
 
         function enableFullScreen() {
-            const clockContainer = document.getElementById('clock-container');
-            clockContainer.addEventListener('dblclick', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
-            });
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function preventSleep() {
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(err => {
+                    console.error(`${err.name}, ${err.message}`);
+                });
+            }
+        }
+
+        function showButtons() {
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => button.style.display = 'block');
+            setTimeout(() => {
+                buttons.forEach(button => button.style.display = 'none');
+            }, 5000);
+        }
+
+        function toggleTimeFormat() {
+            is24HourFormat = !is24HourFormat;
+            const toggleTimeBtn = document.getElementById('toggle-time-btn');
+            toggleTimeBtn.textContent = is24HourFormat ? 'Switch to 12hr' : 'Switch to 24hr';
+            updateClock();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -111,31 +155,15 @@
             updateBattery();
             setInterval(updateClock, 1000);
             setInterval(updateBattery, 60000); // Update battery every minute
-            setInterval(moveClock, 15000); // Move clock every minute
-            enableFullScreen();
+            setInterval(moveClock, 15000); // Move clock every 15 seconds
+            document.addEventListener('mousemove', showButtons);
+            document.addEventListener('keydown', showButtons);
+
+            document.getElementById('fullscreen-btn').addEventListener('click', enableFullScreen);
+            document.getElementById('toggle-time-btn').addEventListener('click', toggleTimeFormat);
+
             preventSleep();
         });
-
-        // NoSleep.js to prevent screen from sleeping
-        class NoSleep {
-            constructor() {
-                this.noSleepVideo = document.createElement('video');
-                this.noSleepVideo.setAttribute('playsinline', '');
-                this.noSleepVideo.src = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAoaXNvbQAAAAAAAAAAAA8AAAAGcHJmMgAAAB9tZGF0AAAC8m1vb3YAAABsbXZoZAAAAABIZExXAAAD6WlzbzJhdmMxAAAAAElzdWJzAAAAAAABYV9hdnRsNAAAAAE='; // 1x1 pixel video base64 encoded
-                this.noSleepVideo.loop = true;
-                this.noSleepVideo.addEventListener('play', () => {
-                    this.noSleepVideo.currentTime = 0.5;
-                });
-            }
-
-            enable() {
-                this.noSleepVideo.play();
-            }
-
-            disable() {
-                this.noSleepVideo.pause();
-            }
-        }
     </script>
 </body>
 </html>
