@@ -101,8 +101,8 @@
 
         function moveClock() {
             const clockContainer = document.getElementById('clock-container');
-            const x = Math.floor(Math.random() * 900 - 450); // Random movement within -450 to +450 pixels
-            const y = Math.floor(Math.random() * 900 - 450);
+            const x = Math.floor(Math.random() * 400 - 200); // Random movement within -450 to +450 pixels
+            const y = Math.floor(Math.random() * 400 - 200);
             const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
             const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
 
@@ -155,7 +155,7 @@
             updateBattery();
             setInterval(updateClock, 1000);
             setInterval(updateBattery, 60000); // Update battery every minute
-            setInterval(moveClock, 1500000); // Move clock every 15 seconds
+            setInterval(moveClock, 15000); // Move clock every 15 seconds
             document.addEventListener('mousemove', showButtons);
             document.addEventListener('keydown', showButtons);
 
