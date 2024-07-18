@@ -92,7 +92,7 @@
                 const batteryLevel = Math.round(battery.level * 100);
                 batteryDiv.textContent = `${batteryLevel}%`;
 
-                if (batteryLevel < 25) {
+                if (batteryLevel < 35) {
                     window.close();
                 }
             });
