@@ -68,16 +68,15 @@
             const now = new Date();
             let hours = now.getHours();
             const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             if (!is24HourFormat) {
                 hours = hours % 12;
                 hours = hours ? hours : 12; // the hour '0' should be '12'
             }
-            const strTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)} ${!is24HourFormat ? ampm : ''}`;
+            const strTime = `${pad(hours)}:${pad(minutes)} ${!is24HourFormat ? ampm : ''}`;
             clock.textContent = strTime;
 
-            if (minutes === 0 && seconds === 0) {
+            if (minutes === 0) {
                 document.getElementById('chime').play();
             }
         }
