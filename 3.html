@@ -56,12 +56,14 @@
         <div class="buttons-container">
             <button id="fullscreen-btn" class="button">Fullscreen</button>
             <button id="toggle-time-btn" class="button">Switch to 24hr</button>
+            <button id="stop-movement-btn" class="button">Stop Movement</button>
         </div>
     </div>
     <audio id="chime" src="chime.mp3" preload="auto"></audio>
 
     <script>
         let is24HourFormat = false;
+        let isMovementEnabled = true;
 
         function updateClock() {
             const clock = document.getElementById('clock');
@@ -98,18 +100,20 @@
         }
 
         function moveClock() {
-            const clockContainer = document.getElementById('clock-container');
-            const x = Math.floor(Math.random() * 200 - 100); // Random movement within -450 to +450 pixels
-            const y = Math.floor(Math.random() * 200 - 100);
-            const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
-            const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
+            if (isMovementEnabled) {
+                const clockContainer = document.getElementById('clock-container');
+                const x = Math.floor(Math.random() * 200 - 100); // Random movement within -450 to +450 pixels
+                const y = Math.floor(Math.random() * 200 - 100);
+                const currentLeft = parseInt(window.getComputedStyle(clockContainer).left) || window.innerWidth / 2 - clockContainer.offsetWidth / 2;
+                const currentTop = parseInt(window.getComputedStyle(clockContainer).top) || window.innerHeight / 2 - clockContainer.offsetHeight / 2;
 
-            // Ensure new position stays within the viewport
-            const newLeft = Math.max(0, Math.min(window.innerWidth - clockContainer.offsetWidth, currentLeft + x));
-            const newTop = Math.max(0, Math.min(window.innerHeight - clockContainer.offsetHeight, currentTop + y));
+                // Ensure new position stays within the viewport
+                const newLeft = Math.max(0, Math.min(window.innerWidth - clockContainer.offsetWidth, currentLeft + x));
+                const newTop = Math.max(0, Math.min(window.innerHeight - clockContainer.offsetHeight, currentTop + y));
 
-            clockContainer.style.left = `${newLeft}px`;
-            clockContainer.style.top = `${newTop}px`;
+                clockContainer.style.left = `${newLeft}px`;
+                clockContainer.style.top = `${newTop}px`;
+            }
         }
 
         function enableFullScreen() {
@@ -148,17 +152,34 @@
             updateClock();
         }
 
+        function toggleMovement() {
+            isMovementEnabled = !isMovementEnabled;
+
+            const stopMovementBtn = document.getElementById('stop-movement-btn');
+            stopMovementBtn.textContent = isMovementEnabled ? 'Stop Movement' : 'Start Movement';
+
+            if (!isMovementEnabled) {
+                // Reset clock position to center
+                const clockContainer = document.getElementById('clock-container');
+                const defaultLeft = (window.innerWidth - clockContainer.offsetWidth) / 2;
+                const defaultTop = (window.innerHeight - clockContainer.offsetHeight) / 2;
+                clockContainer.style.left = `${defaultLeft}px`;
+                clockContainer.style.top = `${defaultTop}px`;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateClock();
             updateBattery();
             setInterval(updateClock, 60000);
             setInterval(updateBattery, 60000); // Update battery every minute
-            setInterval(moveClock, 60000); // Move clock every 15 seconds
+            setInterval(moveClock, 60000); // Move clock every minute
             document.addEventListener('mousemove', showButtons);
             document.addEventListener('keydown', showButtons);
 
             document.getElementById('fullscreen-btn').addEventListener('click', enableFullScreen);
             document.getElementById('toggle-time-btn').addEventListener('click', toggleTimeFormat);
+            document.getElementById('stop-movement-btn').addEventListener('click', toggleMovement);
 
             preventSleep();
         });
